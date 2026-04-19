@@ -67,7 +67,7 @@ const TideChart = () => {
     const processChartData = (extremesData) => {
       // Process and aggregate data
       const data = extremesData.data.map((item) => ({
-        time: new Date(item.time).toLocaleString(),
+        time: item.time,
         height: parseFloat(item.height),
         type: item.type,
       }));
@@ -103,7 +103,7 @@ const TideChart = () => {
     if (!date.isValid()) {
       console.error('Invalid date format:', time);
       const fallbackDate = moment();
-      return fallbackDate.format('DD/YYYY');
+      return fallbackDate.format('DD/MM');
     }
     return date.format('DD/MM');
   };
