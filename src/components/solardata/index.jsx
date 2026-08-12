@@ -1,8 +1,7 @@
 /* eslint-disable no-shadow */
-/* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
-/* eslint-disable import/no-extraneous-dependencies */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   useTemplateVal,
@@ -11,6 +10,7 @@ import {
 import PieChartUVGauge from '../piechartuvgauge';
 
 const SolarData = () => {
+  const { t } = useTranslation();
   const [solarData, setSolarData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,7 +39,6 @@ const SolarData = () => {
           const solarData = JSON.parse(storedSolarData);
           setSolarData(solarData);
           setLoading(false);
-          console.log('Solar Data fetched from storage:', JSON.parse(storedSolarData));
           return;
         }
       }
@@ -70,8 +69,8 @@ const SolarData = () => {
     fetchSolarData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error fetching data </div>;
+  if (loading) return <div>{t('Loading...')}</div>;
+  if (error) return <div>{t('Error fetching data')}</div>;
 
   return (
     <div className="flex flex-col items-center">
@@ -93,7 +92,7 @@ const SolarData = () => {
                   </div>
                   <div className="h-8 w-full">
                     <FitText>
-                      UV Index now
+                      {t('UV Index now')}
                     </FitText>
                   </div>
                   <div className="h-6 w-full">

@@ -1,9 +1,8 @@
 /* eslint-disable react/jsx-boolean-value */
 /* eslint-disable no-shadow */
-/* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
-/* eslint-disable import/no-extraneous-dependencies */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import moment from 'moment';
 import {
@@ -13,6 +12,7 @@ import {
 import { useTemplateVal } from '@dsplay/react-template-utils';
 
 const TideChart = () => {
+  const { t } = useTranslation();
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +41,6 @@ const TideChart = () => {
           const extremesData = JSON.parse(storedExtremesData);
           processChartData(extremesData);
           setLoading(false);
-          console.log('Tide data fetched from storage >>>', JSON.parse(storedExtremesData));
           return;
         }
       }
@@ -78,11 +77,12 @@ const TideChart = () => {
     fetchData();
   }, [latitude, longitude, stormGlassAPIKey]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>{t('Loading...')}</div>;
   if (error) {
     return (
       <div>
-        Error fetching data -
+        {t('Error fetching data')}
+        {' - '}
         {error.toString()}
       </div>
     );
@@ -135,7 +135,6 @@ const TideChart = () => {
     cx, cy, index,
   }) => {
     const fillColor = chartData[index].type === 'low' ? 'red' : '#2D879A';
-    console.log(chartData[index]);
 
     return (
       <circle
@@ -183,7 +182,7 @@ const TideChart = () => {
           allowDataOverflow={true}
           tick={{ transform: 'translate(-20, 0)', fill: 'white' }}
           label={{
-            value: 'Metros',
+            value: t('Meters'),
             angle: -90,
             position: 'insideLeft',
             style: { textAnchor: 'middle', fill: 'white' },

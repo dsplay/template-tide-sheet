@@ -1,8 +1,7 @@
 /* eslint-disable no-shadow */
-/* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
-/* eslint-disable import/no-extraneous-dependencies */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   useTemplateVal,
@@ -11,6 +10,7 @@ import {
 import PieChartRoseCompass from '../piechartrosecompass';
 
 const WindData = () => {
+  const { t } = useTranslation();
   const [windData, setWindData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,7 +39,6 @@ const WindData = () => {
           const windData = JSON.parse(storedWindData);
           setWindData(windData);
           setLoading(false);
-          console.log('Wind Data fetched from storage >>>', JSON.parse(storedWindData));
           return;
         }
       }
@@ -70,11 +69,12 @@ const WindData = () => {
     fetchWindData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>{t('Loading...')}</div>;
   if (error) {
     return (
       <div>
-        Error fetching data -
+        {t('Error fetching data')}
+        {' - '}
         {error.toString()}
       </div>
     );
@@ -94,12 +94,12 @@ const WindData = () => {
                 <div className="flex flex-wrap -mt-2">
                   <div className="h-10 w-1/2 p-2 items-center">
                     <FitText>
-                      Wind velocity
+                      {t('Wind velocity')}
                     </FitText>
                   </div>
                   <div className="h-10 w-1/2 p-2 items-center">
                     <FitText>
-                      Wind direction
+                      {t('Wind direction')}
                     </FitText>
                   </div>
                   <div className="h-10 w-1/2 p-1 items-center -mt-2">
