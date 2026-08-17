@@ -6,6 +6,14 @@ A [React](https://reactjs.org/) [HTML-based template](https://developers.dsplay.
 
 > Built with [Vite](https://vitejs.dev/), requires Node.js 22.22.2+, 24.15.0+, or 26+ (see `.nvmrc`).
 
+## Supported screen formats
+
+| Landscape | Portrait | Square |
+|-----------|----------|--------|
+| ![Landscape](docs/screenshots/landscape.png) | ![Portrait](docs/screenshots/portrait.png) | ![Square](docs/screenshots/square.png) |
+
+> Horizontal and vertical banner formats are omitted: this template's fixed grid (tide chart on top, map/UV gauge/wind compass row below) doesn't adapt to extreme aspect ratios. At the horizontal banner height, the chart's data and axis collapse to nothing and the bottom row is clipped to slivers. At the vertical banner width, the wind gauge and compass panels get pushed off-screen and overlap the map (confirmed via `getBoundingClientRect()` showing the compass extending ~60px past the 200px-wide viewport and the UV gauge shifted ~85px off-screen to the left).
+
 ## Features
 
 - Tide extremes chart (high/low tide heights over the next few days).
