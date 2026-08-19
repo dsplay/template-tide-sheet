@@ -36,7 +36,9 @@
     ">0.2%",
     "not dead",
     "not ie <= 11",
-    "not op_mini all"
+    "not op_mini all",
+    "Chrome >= 45",
+    "Android >= 4.4"
   ],
   "devDependencies": {
     "@dsplay/template-manifest": "^1.0.4",
