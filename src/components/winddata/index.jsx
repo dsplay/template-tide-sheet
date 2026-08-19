@@ -70,15 +70,7 @@ const WindData = () => {
   }, []);
 
   if (loading) return <div>{t('Loading...')}</div>;
-  if (error) {
-    return (
-      <div>
-        {t('Error fetching data')}
-        {' - '}
-        {error.toString()}
-      </div>
-    );
-  }
+  if (error) return <div>{t('Error fetching data')}</div>;
   return (
     <div className="flex flex-col items-center">
       {windData && (
