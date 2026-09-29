@@ -98,9 +98,16 @@ After touching either of these, verify by actually running `npm run build` and g
 
 This repo's `browserslist` was `[">0.2%", "not dead", "not ie <= 11", "not op_mini all"]` — missing the `Chrome >= 45`/`Android >= 4.4` entries present in the reference boilerplate, meaning `npx browserslist` had no explicit floor pinning old Chrome/Android versions into the resolved target list. `@vitejs/plugin-legacy` was still correctly wired to `pkg.browserslist` in `vite.config.js`, so the config looked fine at a glance. `vite.config.js`'s `build.minify: 'terser'` (with its explanatory comment) was already present here, so no change was needed there. Found during a full fleet audit and fixed by restoring the two missing browserslist entries; after rebuilding, `npx browserslist` resolves down through `chrome 45` and `android 4.4`, and the legacy chunk (`build/assets/index-legacy-*.js`) has zero untranspiled arrow functions and no real `?.`/`??` (the only `?.` matches are a regex character-class escape and two ternary expressions like `n?.5:...`, not optional chaining).
 
+## Supply chain hardening
+
+- `.npmrc` sets `ignore-scripts=true` (no dependency lifecycle scripts run on install), `min-release-age=3` (npm refuses versions younger than 3 days) and `save-exact=true`.
+- **Dependencies must ALWAYS be pinned to an exact version** — never `^`, `~`, `>=`, `latest` or any other range, in `dependencies` and `devDependencies` alike. When adding or bumping a package, use `npm install <pkg>@<version>` (`save-exact=true` in `.npmrc` handles it) and check `package.json` afterwards; fix any range that slips in. `src/sanity.test.js` enforces this, plus `.npmrc` and Dependabot settings and the legacy-WebView invariants above.
+- `.github/dependabot.yml` uses a 3-day cooldown (7 days for majors).
+- Currently no dependency needs its install script. If one ever does, add a `setup` script (`npm install && npm rebuild <pkg>`) and document it in README.md.
+
 ## Dependency management
 
-Regular npm dependencies, not vendored files — `npm outdated` / `npm update` for in-range bumps. For an out-of-range (typically major) bump, apply it deliberately and verify `npm start`, `npm run build`, and `npm test` still work before committing.
+Regular npm dependencies, not vendored files — versions are pinned, so bump explicitly (`npm outdated`, then `npm install <pkg>@<version>`) or merge Dependabot PRs. For a major bump, apply it deliberately and verify `npm start`, `npm run build`, and `npm test` still work before committing.
 
 The 2026 Vite/React 19 migration removed `chart.js`/`react-chartjs-2`, `d3`, `date-fns`, `dayjs`, `react-compass`, `@types/leaflet`, `@types/react-compass` — none were actually imported anywhere in `src/` (this template renders its charts with `recharts` and its map with `react-leaflet` only). It also removed two clearly accidental dependencies, `"-"` and `"save"` (leftovers from a mistyped `npm install` command), and added an explicit `prop-types` dependency — it was being imported by `piechartrosecompass`/`piechartuvgauge` without ever being declared, working only by luck via CRA's flattened `node_modules`.
 
@@ -110,7 +117,7 @@ The 2026 Vite/React 19 migration removed `chart.js`/`react-chartjs-2`, `d3`, `da
 
 ### Known pending bump: ESLint 9 -> 10
 
-`eslint`/`@eslint/js` are pinned to `^9.39.5` (latest is `10.x`). Bumping them currently fails on peer dependency conflicts: `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, and `eslint-plugin-react` haven't declared ESLint 10 support yet as of 2026-08-12 — they're still the actively-maintained canonical packages, not abandoned or superseded, just lagging behind the major. `eslint-plugin-react-hooks` already supports it. `eslint-plugin-unicorn` is pinned to `65.0.1` for the same reason (`66.0.0+` requires ESLint `>=10.4`). Don't force this with `--legacy-peer-deps` — re-check peer ranges periodically and bump all of them together once the laggards catch up.
+`eslint`/`@eslint/js` are pinned to `9.39.5` (latest is `10.x`). Bumping them currently fails on peer dependency conflicts: `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, and `eslint-plugin-react` haven't declared ESLint 10 support yet as of 2026-08-12 — they're still the actively-maintained canonical packages, not abandoned or superseded, just lagging behind the major. `eslint-plugin-react-hooks` already supports it. `eslint-plugin-unicorn` is pinned to `65.0.1` for the same reason (`66.0.0+` requires ESLint `>=10.4`). Don't force this with `--legacy-peer-deps` — re-check peer ranges periodically and bump all of them together once the laggards catch up.
 
 ## Commit messages
 
