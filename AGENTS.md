@@ -28,7 +28,8 @@ src/
     piechartrosecompass/      <-- recharts gauge (full pie + needle) for wind direction
     osmap/                    <-- react-leaflet map centered on the configured coordinate
     intro/                    <-- loading placeholder
-build.sh                    <-- zips the Vite build output into template.zip
+scripts/
+  pack.mjs                   <-- zips the Vite build output into template.zip (Windows/macOS/Linux)
 ```
 
 ## File and folder naming
@@ -64,7 +65,7 @@ Skip a numbered section entirely rather than including it empty.
 
 ## Runtime model
 
-- `public/dsplay-data.js` defines `dsplay_config`/`dsplay_media`/`dsplay_template` mock globals used only in **development**. `build.sh` blanks its content in the production build — the DSPLAY Android app injects the real `window.DSPLAY.getData()` before any script runs.
+- `public/dsplay-data.js` defines `dsplay_config`/`dsplay_media`/`dsplay_template` mock globals used only in **development**. `scripts/pack.mjs` blanks its content in the production build — the DSPLAY Android app injects the real `window.DSPLAY.getData()` before any script runs.
 - [`@dsplay/react-template-utils`](https://github.com/dsplay/react-template-utils) exposes `useTemplateVal` (used for `latitude`/`longitude`/`storm_glass_api_key`).
 - **Always read template data through `@dsplay/react-template-utils`'s hooks (`useTemplateVal`/`useTemplateBoolVal`/`useTemplateIntVal`/`useTemplateFloatVal`/`useTemplate()`/`useMedia()`/`useConfig()`), called inside the function component that uses the value — never call [`@dsplay/template-utils`](https://github.com/dsplay/template-utils)'s vanilla `tval`/`tbval`/`tival`/`tfval`/`config`/`media`/`template` directly, and never read them at module scope as a one-time constant. `@dsplay/template-utils` should not appear as a direct dependency in this template's `package.json` (it's still pulled in transitively via `@dsplay/react-template-utils`).
 - **New `dsplay_template` variable keys should use `snake_case`** (e.g. `background_color`, not `backgroundColor`) — the DSPLAY CMS Manager auto-generates each variable's on-screen label from its key name, and snake_case reads more naturally there. This only applies to variables added from now on — never rename this template's existing keys just to match, since they're already registered/in use in production CMS configurations.
@@ -73,7 +74,7 @@ Skip a numbered section entirely rather than including it empty.
 
 ## Template variable manifest
 
-`vite.config.js` registers `@dsplay/template-manifest`'s Vite plugin, which on every build statically scans `src/` for `tval`/`useTemplateVal`-style reads and captures `public/dsplay-data.js` as example data, writing `template-variables.json` + `template-example-data.json` into the build output — and therefore into `template.zip` (`npm run zip` runs `build.sh`, which zips the whole build output). The DSPLAY CMS reads these two files to auto-detect a template's variables and seed default preview values, instead of requiring manual registration. See [@dsplay/template-manifest](https://www.npmjs.com/package/@dsplay/template-manifest) for exactly what it detects.
+`vite.config.js` registers `@dsplay/template-manifest`'s Vite plugin, which on every build statically scans `src/` for `tval`/`useTemplateVal`-style reads and captures `public/dsplay-data.js` as example data, writing `template-variables.json` + `template-example-data.json` into the build output — and therefore into `template.zip` (`npm run zip` runs `scripts/pack.mjs`, which zips the whole build output). The DSPLAY CMS reads these two files to auto-detect a template's variables and seed default preview values, instead of requiring manual registration. See [@dsplay/template-manifest](https://www.npmjs.com/package/@dsplay/template-manifest) for exactly what it detects.
 
 ## Commands
 
@@ -81,7 +82,7 @@ Skip a numbered section entirely rather than including it empty.
 - `npm run build` — lints, then builds for production.
 - `npm test` / `npm run test:watch` — Vitest.
 - `npm run linter` / `npm run linter:fix` — ESLint on `src`.
-- `npm run zip` — builds, then runs `build.sh` to produce `template.zip` ready for the [DSPLAY Web Manager](https://manager.dsplay.tv/template/create). `build/` and `template.zip` are gitignored.
+- `npm run zip` — builds, then runs `scripts/pack.mjs` to produce `template.zip` ready for the [DSPLAY Web Manager](https://manager.dsplay.tv/template/create). `build/` and `template.zip` are gitignored.
 
 `build`/`zip` chain their steps with `&&` directly in the script (`"build": "npm run linter && vite build"`, `"zip": "npm run build && ..."`) rather than `prebuild`/`prezip` lifecycle hooks — `.npmrc`'s `ignore-scripts=true` (see below) silently skips `pre*`/`post*` hooks for `npm run-script` too, not just install scripts, so a `prezip` step would never actually run and `npm run zip` would silently package a stale/missing `build/`. Keep new multi-step scripts explicit for the same reason — don't reach for `pre*`/`post*` naming in this repo.
 
@@ -116,6 +117,10 @@ The 2026 Vite/React 19 migration removed `chart.js`/`react-chartjs-2`, `d3`, `da
 ### Known pending bump: recharts 2 -> 3
 
 `recharts` is pinned to `^2.12.7`; `2.x` is deprecated upstream in favor of `3.x`, but `3.x` has breaking API changes (see [their migration guide](https://github.com/recharts/recharts/wiki/3.0-migration-guide)) that would need careful re-verification of `tidechart`, `piechartuvgauge`, and `piechartrosecompass`'s custom dots/labels/needles — deliberately left out of the 2026 Vite/React 19 migration's scope to avoid an unverifiable visual regression.
+
+### Fixed: `npm run zip` didn't work on Windows at all
+
+`build.sh` (bash + the system `zip` CLI) was the only thing `npm run zip` ran after building — neither ships on Windows, not even under Git Bash (Git for Windows doesn't bundle `zip`/`unzip`). Replaced with `scripts/pack.mjs`, a plain Node script (`fs` + the `archiver` devDependency, pinned to `7.0.1` — the long-established CJS-style `archiver('zip', opts)` API, not `8.x`'s from-scratch ESM rewrite with a very different class-based API and far less real-world mileage) that does the exact same thing (strip `build/test-assets`, write the `dsplay-data.js` placeholder, zip `build/`'s contents flat into `template.zip`) with no OS-specific tooling at all. `npm run zip` now works identically on Windows, macOS and Linux.
 
 ### Known pending bump: ESLint 9 -> 10
 
